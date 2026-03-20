@@ -223,6 +223,7 @@
     letter-spacing: -0.5px;
     text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     margin-bottom: 16px;
+    color: #ffffff;
   }
 
   .card-divider {
@@ -231,6 +232,7 @@
     border-radius: 2px;
     margin: 0 auto 20px;
     opacity: 0.6;
+    background: #ffffff;
   }
 
   .card-wish-text {
@@ -239,12 +241,14 @@
     font-weight: 400;
     margin-bottom: 24px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    color: #ffffff;
   }
 
   .card-sender {
     font-size: 0.88rem;
     font-style: italic;
     opacity: 0.8;
+    color: #ffffff;
     font-weight: 500;
   }
 
@@ -420,10 +424,10 @@
   function applyCardColors(colors) {
     cardContainer.style.background =
       "linear-gradient(135deg, " + colors.primary + " 0%, " + colors.secondary + " 100%)";
-    cardFestivalName.style.color = colors.accent;
-    cardDivider.style.background = colors.accent;
-    cardWishText.style.color = colors.accent;
-    cardSender.style.color = colors.accent;
+    cardFestivalName.style.color = "#ffffff";
+    cardDivider.style.background = "rgba(255,255,255,0.6)";
+    cardWishText.style.color = "#ffffff";
+    cardSender.style.color = "#ffffff";
   }
 
   function showError(msg) {
