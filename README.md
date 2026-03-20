@@ -67,7 +67,7 @@ cp .env.example .env
 # Edit .env and add your GROQ_API_KEY (optional)
 
 # 5. Run the server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-server-header
 ```
 
 Open `http://localhost:8000` in your browser.
@@ -92,7 +92,7 @@ Open `http://localhost:8000` in your browser.
 1. Push this repository to GitHub
 2. Create a new **Web Service** on [Render](https://render.com)
 3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-server-header`
 5. Add environment variables: `GROQ_API_KEY`, `ENVIRONMENT=production`
 6. Deploy — Render provides a public URL
 

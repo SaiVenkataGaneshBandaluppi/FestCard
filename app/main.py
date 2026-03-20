@@ -119,8 +119,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Cache-Control"] = "no-store"
-        response.headers.pop("server", None)
-        response.headers.pop("Server", None)
+        for key in ("server", "Server"):
+            if key in response.headers:
+                del response.headers[key]
         if ENVIRONMENT == "production":
             response.headers["Strict-Transport-Security"] = (
                 "max-age=31536000; includeSubDomains"
