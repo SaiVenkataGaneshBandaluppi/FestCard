@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<title>FestCard - Festival Greeting Card Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3250;
+    --text: #e8eaf0;
+    --text-muted: #8b90a8;
+    --accent: #6c63ff;
+    --accent-hover: #5a52e0;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  header .logo-mark {
+    width: 36px;
+    height: 36px;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    gap: 32px;
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .panel-form {
+    width: 360px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-preview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  select, input[type="text"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+
+  select:focus, input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+
+  select option { background: var(--surface2); }
+
+  .tone-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .tone-btn {
+    flex: 1;
+    padding: 9px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .tone-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .tone-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-generate:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: rgba(220,38,38,0.12);
+    border: 1px solid rgba(220,38,38,0.3);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    display: none;
+  }
+
+  .card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .card-container {
+    min-width: 420px;
+    min-height: 280px;
+    width: 100%;
+    max-width: 620px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 40px 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #1a1d27 0%, #22263a 100%);
+  }
+
+  .card-placeholder {
+    color: rgba(255,255,255,0.25);
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+
+  .card-content {
+    width: 100%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .card-content.visible { opacity: 1; }
+
+  .card-festival-name {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    margin-bottom: 16px;
+  }
+
+  .card-divider {
+    width: 60px;
+    height: 2px;
+    border-radius: 2px;
+    margin: 0 auto 20px;
+    opacity: 0.6;
+  }
+
+  .card-wish-text {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    font-weight: 400;
+    margin-bottom: 24px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .card-sender {
+    font-size: 0.88rem;
+    font-style: italic;
+    opacity: 0.8;
+    font-weight: 500;
+  }
+
+  .btn-download {
+    padding: 10px 28px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    display: none;
+  }
+
+  .btn-download:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  footer {
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) {
+    main {
+      flex-direction: column;
+      padding: 20px 16px;
+      gap: 24px;
+    }
+    .panel-form { width: 100%; }
+    .card-container { min-width: unset; padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="logo-mark" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="36" height="36" rx="8" fill="#6c63ff"/>
+    <path d="M18 8 L20.5 15H28L22 19.5L24.5 26.5L18 22L11.5 26.5L14 19.5L8 15H15.5Z" fill="#FFD700" opacity="0.9"/>
+  </svg>
+  <h1>FestCard</h1>
+</header>
+
+<main>
+  <aside class="panel-form">
+    <div class="field-group">
+      <label for="festival-select">Festival</label>
+      <select id="festival-select">
+        <option value="">Select a festival</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label for="recipient-input">Recipient Name</label>
+      <input type="text" id="recipient-input" placeholder="Who is this card for?" maxlength="50">
+    </div>
+
+    <div class="field-group">
+      <label for="sender-input">Your Name</label>
+      <input type="text" id="sender-input" placeholder="Your name" maxlength="50">
+    </div>
+
+    <div class="field-group">
+      <label>Tone</label>
+      <div class="tone-group">
+        <button class="tone-btn active" data-tone="casual">Casual</button>
+        <button class="tone-btn" data-tone="formal">Formal</button>
+        <button class="tone-btn" data-tone="heartfelt">Heartfelt</button>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="btn-generate">
+      <span class="spinner" id="spinner"></span>
+      <span id="btn-label">Generate Card</span>
+    </button>
+
+    <div class="error-msg" id="error-msg"></div>
+  </aside>
+
+  <section class="panel-preview">
+    <div class="card-wrapper">
+      <div class="card-container" id="card-container">
+        <p class="card-placeholder" id="card-placeholder">Your card will appear here</p>
+        <div class="card-content" id="card-content">
+          <div class="card-festival-name" id="card-festival-name"></div>
+          <div class="card-divider" id="card-divider"></div>
+          <div class="card-wish-text" id="card-wish-text"></div>
+          <div class="card-sender" id="card-sender"></div>
+        </div>
+      </div>
+      <button class="btn-download" id="btn-download">Download PNG</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  FestCard &mdash; Generate personalized festival greeting cards
+</footer>
+
+<script src="/assets/html2canvas.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const FESTIVAL_COLORS = {};
+  let selectedTone = "casual";
+  let lastFestival = "";
+  let lastRecipient = "";
+  let lastSender = "";
+
+  const festivalSelect = document.getElementById("festival-select");
+  const recipientInput = document.getElementById("recipient-input");
+  const senderInput = document.getElementById("sender-input");
+  const btnGenerate = document.getElementById("btn-generate");
+  const btnLabel = document.getElementById("btn-label");
+  const spinner = document.getElementById("spinner");
+  const errorMsg = document.getElementById("error-msg");
+  const cardContainer = document.getElementById("card-container");
+  const cardPlaceholder = document.getElementById("card-placeholder");
+  const cardContent = document.getElementById("card-content");
+  const cardFestivalName = document.getElementById("card-festival-name");
+  const cardDivider = document.getElementById("card-divider");
+  const cardWishText = document.getElementById("card-wish-text");
+  const cardSender = document.getElementById("card-sender");
+  const btnDownload = document.getElementById("btn-download");
+
+  function sanitizeDisplay(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function loadFestivals() {
+    try {
+      const resp = await fetch("/api/festivals");
+      if (!resp.ok) throw new Error("Failed to load festivals");
+      const data = await resp.json();
+      data.festivals.forEach(function (f) {
+        FESTIVAL_COLORS[f.name] = f.colors;
+        const opt = document.createElement("option");
+        opt.value = f.name;
+        opt.textContent = f.name;
+        festivalSelect.appendChild(opt);
+      });
+    } catch (e) {
+      showError("Could not load festival list. Please refresh the page.");
+    }
+  }
+
+  document.querySelectorAll(".tone-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tone-btn").forEach(function (b) {
+        b.classList.remove("active");
+      });
+      btn.classList.add("active");
+      selectedTone = btn.dataset.tone;
+    });
+  });
+
+  festivalSelect.addEventListener("change", function () {
+    const colors = FESTIVAL_COLORS[festivalSelect.value];
+    if (colors) {
+      applyCardColors(colors);
+    }
+  });
+
+  function applyCardColors(colors) {
+    cardContainer.style.background =
+      "linear-gradient(135deg, " + colors.primary + " 0%, " + colors.secondary + " 100%)";
+    cardFestivalName.style.color = colors.accent;
+    cardDivider.style.background = colors.accent;
+    cardWishText.style.color = colors.accent;
+    cardSender.style.color = colors.accent;
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.style.display = "block";
+  }
+
+  function hideError() {
+    errorMsg.style.display = "none";
+    errorMsg.textContent = "";
+  }
+
+  function setLoading(loading) {
+    btnGenerate.disabled = loading;
+    spinner.style.display = loading ? "block" : "none";
+    btnLabel.textContent = loading ? "Generating..." : "Generate Card";
+  }
+
+  btnGenerate.addEventListener("click", async function () {
+    hideError();
+
+    const festival = festivalSelect.value.trim();
+    const recipient = recipientInput.value.trim();
+    const sender = senderInput.value.trim();
+
+    if (!festival) { showError("Please select a festival."); return; }
+    if (!recipient) { showError("Please enter a recipient name."); return; }
+    if (!sender) { showError("Please enter your name."); return; }
+    if (recipient.length > 50) { showError("Recipient name is too long."); return; }
+    if (sender.length > 50) { showError("Sender name is too long."); return; }
+
+    setLoading(true);
+
+    try {
+      const resp = await fetch("/api/generate-wish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          festival: festival,
+          recipient_name: recipient,
+          sender_name: sender,
+          tone: selectedTone,
+        }),
+      });
+
+      if (resp.status === 429) {
+        showError("Too many requests. Please wait a moment and try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (!resp.ok) {
+        showError("Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const data = await resp.json();
+
+      lastFestival = festival;
+      lastRecipient = recipient;
+      lastSender = sender;
+
+      const colors = FESTIVAL_COLORS[festival];
+      if (colors) applyCardColors(colors);
+
+      cardFestivalName.textContent = festival;
+      cardWishText.textContent = data.wish_text;
+
+      const senderPrefix = selectedTone === "formal" ? "From," : "With love,";
+      cardSender.textContent = senderPrefix + " " + sender;
+
+      cardPlaceholder.style.display = "none";
+      cardContent.classList.add("visible");
+      btnDownload.style.display = "inline-block";
+    } catch (e) {
+      showError("Network error. Please check your connection and try again.");
+    }
+
+    setLoading(false);
+  });
+
+  btnDownload.addEventListener("click", async function () {
+    btnDownload.disabled = true;
+    btnDownload.textContent = "Downloading...";
+
+    try {
+      const canvas = await html2canvas(cardContainer, {
+        scale: 2,
+        useCORS: false,
+        allowTaint: false,
+        backgroundColor: null,
+        logging: false,
+      });
+
+      canvas.toBlob(function (blob) {
+        const ts = Date.now();
+        const safeFestival = lastFestival.replace(/\s+/g, "-").toLowerCase();
+        const safeRecipient = lastRecipient.replace(/\s+/g, "-").toLowerCase().slice(0, 20);
+        const filename = "festcard-" + safeFestival + "-" + safeRecipient + "-" + ts + ".png";
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    } catch (e) {
+      // Download failed silently — card is still visible
+    }
+
+    setTimeout(function () {
+      btnDownload.disabled = false;
+      btnDownload.textContent = "Download PNG";
+    }, 1500);
+  });
+
+  loadFestivals();
+})();
+</script>
+</body>
+</html>
